@@ -1,1 +1,27 @@
-<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>דשבורד</title></head><body><h1>דשבורד</h1><script>const SHEETS_URL='https://script.google.com/macros/s/AKfycbzvspvD5wMEbWKz00-BpqZMLYxyqGiPZBXNeRjTRPXYLU0rgmt7A0O_4ZpW9lnksB925w/exec';</script></body></html>
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yasou - ניהול</title>
+<style>body{font-family:Assistant,system-ui;background:#f6f2ea;margin:0;padding:20px}h1{color:#206c5b}table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:right}th{background:#206c5b;color:#fff}.pill{padding:4px 8px;border-radius:8px;background:#eee;font-size:12px}</style>
+</head>
+<body>
+<h1>הזמנות Yasou</h1>
+<div><button onclick="load()">רענן</button> <span id="count"></span></div>
+<table id="tbl"><thead><tr><th>תאריך</th><th>שעה</th><th>מתחם</th><th>שם</th><th>טלפון</th><th>סועדים</th><th>סטטוס</th></tr></thead><tbody></tbody></table>
+
+<script>
+const URL='https://script.google.com/macros/s/AKfycbzvspvD5wMEbWKz00-BpqZMLYxyqGiPZBXNeRjTRPXYLU0rgmt7A0O_4ZpW9lnksB925w/exec';
+async function load(){
+  const r=await fetch(`${URL}?action=getReservations&_=${Date.now()}`);
+  const j=await r.json(); const data=(j.reservations||[]).sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+  document.getElementById('count').textContent=`${data.length} הזמנות`;
+  const tb=document.querySelector('#tbl tbody'); tb.innerHTML='';
+  data.forEach(o=>{
+    tb.innerHTML+=`<tr><td>${o.date}</td><td>${o.time}</td><td><span class="pill">${o.zone||''}</span></td><td>${o.customerName||''}</td><td>${o.phone||''}</td><td>${o.guests||''}</td><td>${o.status||''}</td></tr>`;
+  });
+}
+load();
+</script>
+</body>
+</html>
