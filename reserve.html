@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yasou Taverna - הזמנת שולחן</title>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f2ea;--panel:#fffdf8;--text:#1f2520;--muted:#6e746d;--brand:#206c5b;--gold:#d99f2f;--line:#ded7ca}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Assistant,system-ui;padding:24px}
+.card{max-width:720px;margin:auto;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:0 16px 40px rgba(0,0,0,.08)}
+h1{margin:0 0 8px;font-size:32px;color:var(--brand)}p.muted{color:var(--muted);margin:0 0 20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:640px){.grid{grid-template-columns:1fr}}
+label{display:block;font-weight:600;margin:8px 0 6px}input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit}
+button{background:var(--brand);color:#fff;border:0;padding:14px 18px;border-radius:12px;font-weight:800;cursor:pointer;width:100%;margin-top:10px}
+button:disabled{opacity:.6}.zone-pills{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.zone-pills button{width:auto;padding:8px 14px;background:#fff;color:var(--brand);border:1px solid var(--brand)}.zone-pills button.active{background:var(--brand);color:#fff}
+.note{background:#fff6e4;border:1px dashed var(--gold);padding:12px;border-radius:12px;margin-top:14px;font-size:14px}
+.success{background:#e6f4ea;border:1px solid #3aa66d;padding:14px;border-radius:12px;margin-top:14px;display:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>הזמנת שולחן - Yasou Taverna</h1>
+  <p class="muted">בחרו מתחם, תאריך ושעה. הזמנות לקבוצות מעל 6 דורשות פיקדון.</p>
+
+  <div class="zone-pills">
+    <button data-zone="מקורה" class="active">מקורה</button>
+    <button data-zone="פנימי">פנימי</button>
+    <button data-zone="חיצוני">חיצוני</button>
+  </div>
+
+  <div class="grid">
+    <div><label>שם מלא</label><input id="name" placeholder="ישראל ישראלי"></div>
+    <div><label>טלפון</label><input id="phone" placeholder="050-1234567"></div>
+    <div><label>תאריך</label><input id="date" type="date"></div>
+    <div><label>מתחם</label><input id="zone" value="מקורה" readonly></div>
+    <div><label>שעה</label><select id="time"></select></div>
+    <div><label>מספר סועדים</label><select id="guests"></select></div>
+  </div>
+  <label>הערות</label><textarea id="notes" rows="2" placeholder="יום הולדת, כיסא תינוק..."></textarea>
+  <button id="submit">בדוק זמינות ושלח הזמנה</button>
+
+  <div class="note" id="depositNote" style="display:none">לקבוצות מעל 6 סועדים נדרש פיקדון של $20 לאדם. ניצור קשר לאישור.</div>
+  <div class="success" id="ok">ההזמנה נשלחה!</div>
+</div>
+
+<script>
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzvspvD5wMEbWKz00-BpqZMLYxyqGiPZBXNeRjTRPXYLU0rgmt7A0O_4ZpW9lnksB925w/exec';
+const ZONE_TIMES = {
+  'מקורה': ['20:00','20:05','20:10'],
+  'פנימי': ['20:30','20:35'],
+  'חיצוני': ['21:00','21:05','21:10','21:15']
+};
+
+const dateEl=document.getElementById('date'),timeEl=document.getElementById('time'),guestsEl=document.getElementById('guests'),zoneEl=document.getElementById('zone'),depositNote=document.getElementById('depositNote');
+dateEl.valueAsDate=new Date();
+for(let i=1;i<=12;i++){guestsEl.innerHTML+=`<option>${i}</option>`}
+function setTimes(z){timeEl.innerHTML='';ZONE_TIMES[z].forEach(t=>timeEl.innerHTML+=`<option>${t}</option>`)} setTimes('מקורה');
+document.querySelectorAll('.zone-pills button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.zone-pills button').forEach(x=>x.classList.remove('active'));b.classList.add('active');zoneEl.value=b.dataset.zone;setTimes(b.dataset.zone)});
+guestsEl.onchange=()=>depositNote.style.display=Number(guestsEl.value)>6?'block':'none';
+
+async function check(date,time,zone){
+  const r=await fetch(`${SHEETS_URL}?action=getReservations&_=${Date.now()}`);
+  const j=await r.json(); const list=j.reservations||[]; const target=new Date(`${date}T${time}`);
+  return!list.some(o=>o.date===date && o.zone===zone && o.status!=='cancelled' && Math.abs(new Date(`${o.date}T${o.time}`)-target)<90*60000);
+}
+
+document.getElementById('submit').onclick=async()=>{
+  const btn=document.getElementById('submit');btn.disabled=true;btn.textContent='בודק...';
+  const p={id:'r'+Date.now(),customerName:name.value.trim(),phone:phone.value.trim(),date:dateEl.value,time:timeEl.value,guests:+guestsEl.value,zone:zoneEl.value,tableId:zoneEl.value,status:'confirmed',notes:notes.value.trim(),createdAt:new Date().toISOString()};
+  if(!p.customerName||!p.phone){alert('נא למלא שם וטלפון');btn.disabled=false;btn.textContent='בדוק זמינות ושלח הזמנה';return}
+  if(!(await check(p.date,p.time,p.zone))){alert('השעה תפוסה במתחם זה');btn.disabled=false;btn.textContent='בדוק זמינות ושלח הזמנה';return}
+  await fetch(SHEETS_URL,{method:'POST',body:JSON.stringify({action:'addReservation',...p})});
+  document.getElementById('ok').style.display='block';btn.textContent='נשלח בהצלחה';
+};
+</script>
+</body>
+</html>
