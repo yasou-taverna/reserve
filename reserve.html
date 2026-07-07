@@ -78,7 +78,9 @@ button {
 	<div id="k" class="ok">
 		נשלח בהצלחה!</div>
 </div>
-<script>const U='https://script.google.com/macros/s/AKfycbzvspvD5wMEbWKz00-BpqZMLYxyqGiPZBXNeRjTRPXYLU0rgmt7A0O_4ZpW9lnksB925w/exec';const Z={'20:00':'מקורה','20:05':'מקורה','20:10':'מקורה','20:30':'פנימי','20:35':'פנימי','21:00':'חיצוני','21:05':'חיצוני','21:10':'חיצוני','21:15':'חיצוני'};d.valueAsDate=new Date();Object.keys(Z).forEach(x=>t.innerHTML+=`<option>${x}</option>`);for(i=1;i<=12;i++)g.innerHTML+=`<option>${i}</option>`;b.onclick=async()=>{if(!a.checked)return alert('אשר תנאים');const r={id:'r'+Date.now(),customerName:n.value,phone:p.value,date:d.value,time:t.value,guests:g.value,zone:Z[t.value],tableId:Z[t.value],status:'new',notes:o.value,createdAt:new Date().toISOString()};await fetch(U,{method:'POST',body:JSON.stringify({action:'addReservation',...r})});k.style.display='block';b.disabled=1};</script>
+<script>
+	const U='https://script.google.com/macros/s/AKfycbz3FFymKPMqWYt8tqW2ee_UAaN_7uEst120sVQdnB8tTWov5nQspcHI9qL2TOM8nzDl2Q/exec';
+	const Z={'20:00':'מקורה','20:05':'מקורה','20:10':'מקורה','20:30':'פנימי','20:35':'פנימי','21:00':'חיצוני','21:05':'חיצוני','21:10':'חיצוני','21:15':'חיצוני'};d.valueAsDate=new Date();Object.keys(Z).forEach(x=>t.innerHTML+=`<option>${x}</option>`);for(i=1;i<=12;i++)g.innerHTML+=`<option>${i}</option>`;b.onclick=async()=>{if(!a.checked)return alert('אשר תנאים');const r={id:'r'+Date.now(),customerName:n.value,phone:p.value,date:d.value,time:t.value,guests:g.value,zone:Z[t.value],tableId:Z[t.value],status:'new',notes:o.value,createdAt:new Date().toISOString()};await fetch(U,{method:'POST',body:JSON.stringify({action:'addReservation',...r})});k.style.display='block';b.disabled=1};</script>
 
 </body>
 
